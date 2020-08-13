@@ -149,7 +149,7 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
+  m_Color: {r: 1, g: 0.94558215, b: 0.7971698, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
@@ -207,7 +207,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
   m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalPosition: {x: 1.88, y: 7.49, z: -3.26}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -349,13 +349,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1057563870}
-  m_LocalRotation: {x: -0.015086677, y: -0, z: -0, w: 0.9998862}
-  m_LocalPosition: {x: 0, y: 0.03, z: 6.32}
+  m_LocalRotation: {x: -0.050104193, y: -0, z: -0, w: 0.998744}
+  m_LocalPosition: {x: 0, y: -0.07, z: 5.56}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1526616935}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: -1.7290001, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -5.7440004, y: 0, z: 0}
 --- !u!1 &1286584745
 GameObject:
   m_ObjectHideFlags: 0
@@ -379,13 +379,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1286584745}
-  m_LocalRotation: {x: -0.27163357, y: -0, z: -0, w: 0.9624008}
-  m_LocalPosition: {x: 0, y: 2.7, z: -7.91}
+  m_LocalRotation: {x: 0.19660445, y: -0, z: -0, w: 0.98048294}
+  m_LocalPosition: {x: -7.89, y: 2.7, z: -7.91}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1526616935}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: -31.523, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 22.677002, y: 0, z: 0}
 --- !u!1 &1526616933
 GameObject:
   m_ObjectHideFlags: 0
@@ -419,8 +419,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   head: {fileID: 1286584746}
   tail: {fileID: 1057563871}
-  ownerID: 14460
-  OffsetV: 9.59
+  TextureTileScale: 6.87
+  MeshTileScale: 2
+  ownerID: 14450
+  OffsetV: 8.06
 --- !u!4 &1526616935
 Transform:
   m_ObjectHideFlags: 0
@@ -429,7 +431,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1526616933}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 11.84}
+  m_LocalPosition: {x: 0, y: -0.44, z: -2.58}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1286584746}

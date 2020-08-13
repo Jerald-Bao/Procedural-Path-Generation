@@ -38,6 +38,10 @@ public class RoadSegment: MonoBehaviour
     private Transform head;
     [SerializeField]
     private Transform tail;
+    [SerializeField]
+    private float TextureTileScale=10f;
+    [SerializeField]
+    private float MeshTileScale=2f;
     private BezierCurve curve;
     private MeshFilter _meshFilter;
     private Mesh _mesh;
@@ -83,6 +87,12 @@ public class RoadSegment: MonoBehaviour
         SetRoadSegment();
     }
 
+    public void Update()
+    {
+        if (head.hasChanged || tail.hasChanged)
+            OnValidate();
+    }
+
 
     public void GenerateMesh()
     {
@@ -95,8 +105,7 @@ public class RoadSegment: MonoBehaviour
         //The Main part of Mesh Generation
         {
             mesh.Clear();
-            int division = Mathf.CeilToInt(Length * (1 + curve.EstimatedCurvature * CurveElaborationCoefficient));
-            division = 10;
+            int division = Mathf.CeilToInt(Length * (1 + curve.EstimatedCurvature * CurveElaborationCoefficient) * MeshTileScale);
             Vector3[] vertices = new Vector3[division * Mesh2D.VertexCount];
             int[] indices = new int[(division-1) * Mesh2D.VertexCount * 3 ];
             Vector3[] tangents = new Vector3[division * Mesh2D.VertexCount];
@@ -105,32 +114,50 @@ public class RoadSegment: MonoBehaviour
             Vector2[] uvs1 = new Vector2[division * Mesh2D.VertexCount];
             float deltaT = 1f / (division-1);
             float t;
+            var UVoffsetV = OffsetV;
             for (int i = 0; i < division; i++)
             {
                 t = i * deltaT;
+                var rootIndex = i * Mesh2D.VertexCount;
+                //ensure there would be smooth and no gap  between segments
                 if (i == division - 1)
                     t = 1;
                 var pointRef = curve.GetPoint(t);
                 
-                // Create Vertices
-                var rootIndex = i * Mesh2D.VertexCount;
+                // Generate vertices & normals
                 for (int innerIndex = 0; innerIndex < Mesh2D.VertexCount; innerIndex++)
                 {
                     Matrix4x4 matrix=Matrix4x4.Rotate(Quaternion.LookRotation(curve.GetTangent(t)));
                     var mesh2DVertex = Mesh2D.vertices[innerIndex];
                     var offset = (matrix * new Vector3(mesh2DVertex.point.x, mesh2DVertex.point.y, 0));
                     vertices[rootIndex + innerIndex] = pointRef + new Vector3(offset.x,offset.y,offset.z);
-
                     normals[rootIndex + innerIndex] = matrix * mesh2DVertex.normal;
-                    uvs0[rootIndex + innerIndex] = new Vector2(Mesh2D.vertices[i].u, 0 );
-                    uvs1[rootIndex + innerIndex] = new Vector2(0, 0 );
                 }
                 
-                // Create Triangles for Mesh
+                // Generate UVs
+                
+                if (i != 0)
+                    // We need to keep that middle lines are the same size for each tile
+                {
+                    //Find the mid point of the road
+                    var currentMidPoint = (vertices[rootIndex] + vertices[rootIndex + Mesh2D.VertexCount - 1]) / 2;
+                    var lastMidPoint = (vertices[rootIndex - Mesh2D.VertexCount] + vertices[rootIndex - 1]) / 2;
+                    
+                    UVoffsetV += Vector3.Distance(currentMidPoint, lastMidPoint) /
+                                 TextureTileScale;
+                }
+                
+                for (int innerIndex = 0; innerIndex < Mesh2D.VertexCount; innerIndex++)
+                {
+                    uvs0[rootIndex + innerIndex] = new Vector2(Mesh2D.vertices[innerIndex].u, UVoffsetV);
+                }
+                
+                // Generate Triangles for Mesh
                 var indexOffsetTri = i * Mesh2D.VertexCount * 3;
                 if (i<division-1)
                     for (int innerIndex = 0; innerIndex < Mesh2D.VertexCount; innerIndex += 2)
                     {
+                        // Generate a quad each loop
                         var indexTri = indexOffsetTri + innerIndex * 3;
                         int lineindexA = Mesh2D.lineIndices[innerIndex];
                         int lineindexB = Mesh2D.lineIndices[innerIndex + 1];

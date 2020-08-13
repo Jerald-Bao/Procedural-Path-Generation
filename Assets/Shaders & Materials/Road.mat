@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Road
-  m_Shader: {fileID: 4800000, guid: a5e77e8604dad4f479da3fec4685afc5, type: 3}
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -66,7 +66,7 @@ Material:
     - _DstBlend: 0
     - _GifTime: 9.53
     - _GlossMapScale: 1
-    - _Glossiness: 0.12
+    - _Glossiness: 0.241
     - _GlossyReflections: 1
     - _Metallic: 0
     - _Mode: 0
@@ -78,7 +78,7 @@ Material:
     - _Stage0: 0
     - _Stage1: 0
     - _Stage2: 0
-    - _UVSec: 0
+    - _UVSec: 1
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
