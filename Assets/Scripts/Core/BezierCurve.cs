@@ -7,18 +7,20 @@ public struct BezierCurve
     Vector3[] points;
     public float tangent;
     public float EstimatedCurvature;
+    public Transform local;
 
     public BezierCurve(Transform head, Transform tail,Transform local,float tangent)
     {
         this.tangent = tangent;
         points=new Vector3[4];
-        points[0] =  head.localPosition;
-        points[1] =  head.localRotation * Vector3.forward *tangent ;
-        points[1] += head.localPosition; 
-        points[2] =  tail.localRotation * -Vector3.forward * tangent;
-        points[2] += tail.localPosition; 
-        points[3] = tail.localPosition;
+        points[0] =  local.InverseTransformPoint(head.position); 
+        points[1] =  local.InverseTransformDirection(head.forward) *tangent ;
+        points[1] += local.InverseTransformPoint(head.position); 
+        points[2] =  -local.InverseTransformDirection(tail.forward) * tangent;
+        points[2] += local.InverseTransformPoint(tail.position); 
+        points[3] = local.InverseTransformPoint(tail.position);
         EstimatedCurvature = 1 - Vector3.Dot(head.forward , tail.forward);    // TO-DO 
+        this.local = local;
     }
     public Vector3 GetPoint(float t)
     {
@@ -38,4 +40,15 @@ public struct BezierCurve
         Vector3 e = Vector3.Lerp( b, c, t );
         return ( e - d ).normalized;
     }
+
+    public void DrawGizmo()
+    {
+        Gizmos.color=Color.red;
+        Gizmos.matrix = local.localToWorldMatrix;
+        Gizmos.DrawSphere(points[0],0.2f);
+        Gizmos.DrawSphere(points[1],0.2f);
+        Gizmos.DrawSphere(points[2],0.2f);
+        Gizmos.DrawSphere(points[3],0.2f);
+    }
+    
 }

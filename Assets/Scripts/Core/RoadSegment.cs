@@ -26,18 +26,26 @@ public class RoadSegment: MonoBehaviour
         {
             if (_roadMaterial == null || !_roadMaterial)
             {
-                //_roadMaterial=Resources.Load<Material>("Road Material");
                 _roadMaterial=Resources.Load<Material>("");
             }
             return _roadMaterial;
         }
     }
-    private Vector3 HeadPos;
-    private Vector3 TailPos;
+    private static Material _blueprintMaterial;
+    public static Material BlueprintMaterial{
+        get
+        {
+            if (_blueprintMaterial == null || !_blueprintMaterial)
+            {
+                _blueprintMaterial=Resources.Load<Material>("blueprint");
+            }
+            return _blueprintMaterial;
+        }
+    }
     [SerializeField]
-    private Transform head;
+    public Transform head;
     [SerializeField]
-    private Transform tail;
+    public Transform tail;
     [SerializeField]
     private float TextureTileScale=10f;
     [SerializeField]
@@ -70,15 +78,17 @@ public class RoadSegment: MonoBehaviour
             return _mesh;
         }
     }
-    public float Length => (HeadPos - TailPos).magnitude;
+
+    public float Length => (head.position - tail.position).magnitude;
     public float OffsetV;
     public void SetRoadSegment()
     {
-        
-        curve = new BezierCurve(head, tail, transform,(head.position - tail.position).magnitude /2 /*Hard - Code*/);
-        HeadPos = head.position;
-        TailPos = tail.position;
-        GenerateMesh();
+        if (head != null && tail != null)
+        {
+            curve = new BezierCurve(head, tail, transform,
+                (head.position - tail.position).magnitude / 2 /*Hard - Code*/);
+            GenerateMesh();
+        }
     }
     
 
@@ -91,6 +101,17 @@ public class RoadSegment: MonoBehaviour
     {
         if (head.hasChanged || tail.hasChanged)
             OnValidate();
+    }
+
+    public void DestroySelf()
+    {
+        var node = tail.GetComponent<RoadNode>();
+        if (node ==null || node.segmentForward == null )
+            Destroy(tail.gameObject);
+        node = head.GetComponent<RoadNode>();
+        if (node ==null || node.segmentBackward == null)
+            Destroy(head.gameObject);
+        Destroy(gameObject);
     }
 
 
@@ -118,7 +139,7 @@ public class RoadSegment: MonoBehaviour
             for (int i = 0; i < division; i++)
             {
                 t = i * deltaT;
-                var rootIndex = i * Mesh2D.VertexCount;
+                var rootVertexIndex = i * Mesh2D.VertexCount;
                 //ensure there would be smooth and no gap  between segments
                 if (i == division - 1)
                     t = 1;
@@ -127,21 +148,24 @@ public class RoadSegment: MonoBehaviour
                 // Generate vertices & normals
                 for (int innerIndex = 0; innerIndex < Mesh2D.VertexCount; innerIndex++)
                 {
-                    Matrix4x4 matrix=Matrix4x4.Rotate(Quaternion.LookRotation(curve.GetTangent(t)));
+                    Quaternion rotation;
+                    if (i == 0)
+                        rotation = Quaternion.LookRotation(curve.GetTangent(0));
+                    else
+                        rotation= Quaternion.LookRotation(curve.GetTangent(t));
                     var mesh2DVertex = Mesh2D.vertices[innerIndex];
-                    var offset = (matrix * new Vector3(mesh2DVertex.point.x, mesh2DVertex.point.y, 0));
-                    vertices[rootIndex + innerIndex] = pointRef + new Vector3(offset.x,offset.y,offset.z);
-                    normals[rootIndex + innerIndex] = matrix * mesh2DVertex.normal;
+                    var offset = (rotation * new Vector3(mesh2DVertex.point.x, mesh2DVertex.point.y, 0));
+                    vertices[rootVertexIndex + innerIndex] = pointRef + new Vector3(offset.x,offset.y,offset.z);
+                    normals[rootVertexIndex + innerIndex] = rotation * mesh2DVertex.normal;
                 }
                 
                 // Generate UVs
-                
                 if (i != 0)
-                    // We need to keep that middle lines are the same size for each tile
+                    // We need to keep middle lines in the same size for each tile
                 {
                     //Find the mid point of the road
-                    var currentMidPoint = (vertices[rootIndex] + vertices[rootIndex + Mesh2D.VertexCount - 1]) / 2;
-                    var lastMidPoint = (vertices[rootIndex - Mesh2D.VertexCount] + vertices[rootIndex - 1]) / 2;
+                    var currentMidPoint = (vertices[rootVertexIndex] + vertices[rootVertexIndex + Mesh2D.VertexCount - 1]) / 2;
+                    var lastMidPoint = (vertices[rootVertexIndex - Mesh2D.VertexCount] + vertices[rootVertexIndex - 1]) / 2;
                     
                     UVoffsetV += Vector3.Distance(currentMidPoint, lastMidPoint) /
                                  TextureTileScale;
@@ -149,24 +173,24 @@ public class RoadSegment: MonoBehaviour
                 
                 for (int innerIndex = 0; innerIndex < Mesh2D.VertexCount; innerIndex++)
                 {
-                    uvs0[rootIndex + innerIndex] = new Vector2(Mesh2D.vertices[innerIndex].u, UVoffsetV);
+                    uvs0[rootVertexIndex + innerIndex] = new Vector2(Mesh2D.vertices[innerIndex].u, UVoffsetV);
                 }
                 
                 // Generate Triangles for Mesh
-                var indexOffsetTri = i * Mesh2D.VertexCount * 3;
+                var rootTriangleIndex = i * Mesh2D.VertexCount * 3;
                 if (i<division-1)
                     for (int innerIndex = 0; innerIndex < Mesh2D.VertexCount; innerIndex += 2)
                     {
                         // Generate a quad each loop
-                        var indexTri = indexOffsetTri + innerIndex * 3;
-                        int lineindexA = Mesh2D.lineIndices[innerIndex];
-                        int lineindexB = Mesh2D.lineIndices[innerIndex + 1];
-                        indices[indexTri] = rootIndex + lineindexB;
-                        indices[indexTri + 1] = rootIndex+lineindexA;
-                        indices[indexTri + 2] = rootIndex + lineindexB + Mesh2D.LineCount;
-                        indices[indexTri + 3] = rootIndex + lineindexA + Mesh2D.LineCount;
-                        indices[indexTri + 4] = rootIndex + lineindexB + Mesh2D.LineCount;
-                        indices[indexTri + 5] = rootIndex + lineindexA;
+                        var indexTri = rootTriangleIndex + innerIndex * 3;
+                        int lineIndexA = Mesh2D.lineIndices[innerIndex];
+                        int lineIndexB = Mesh2D.lineIndices[innerIndex + 1];
+                        indices[indexTri] = rootVertexIndex + lineIndexB;
+                        indices[indexTri + 1] = rootVertexIndex+lineIndexA;
+                        indices[indexTri + 2] = rootVertexIndex + lineIndexB + Mesh2D.LineCount;
+                        indices[indexTri + 3] = rootVertexIndex + lineIndexA + Mesh2D.LineCount;
+                        indices[indexTri + 4] = rootVertexIndex + lineIndexB + Mesh2D.LineCount;
+                        indices[indexTri + 5] = rootVertexIndex + lineIndexA;
                     }
             }
 
@@ -174,7 +198,6 @@ public class RoadSegment: MonoBehaviour
             mesh.SetTriangles(indices,0);
             mesh.SetNormals(normals);
             mesh.SetUVs(0,uvs0);
-            mesh.SetUVs(1,uvs1);
         }
     }
     public void OnDrawGizmosSelected()
@@ -183,7 +206,43 @@ public class RoadSegment: MonoBehaviour
         mesh.GetVertices(vertices);
         foreach (var vertex in vertices)
         {
-            Gizmos.DrawSphere(transform.position + vertex,0.1f);
+            Gizmos.DrawSphere(transform.TransformPoint(vertex),0.1f);
         }
+        curve.DrawGizmo();
     }
+
+    public void GenerateShortSegment(float SegmentLength)
+    {
+        if (tail == null)
+        {
+            tail=new GameObject("Node").transform;
+            tail.SetPositionAndRotation(head.position+head.forward*SegmentLength,head.rotation);
+        }
+        
+        if (head == null)
+        {
+            head=new GameObject("Node").transform;
+            head.SetPositionAndRotation(tail.position - tail.forward * SegmentLength,tail.rotation);
+        }
+
+        SetRoadSegment();
+    }
+
+    public void SetBlueprint()
+    {
+        GetComponent<MeshRenderer>().sharedMaterial = BlueprintMaterial;
+    }
+
+    public void SetNode(RoadNode node, bool isHead)
+    {
+        SetNode(node.transform, isHead);
+    }
+    public void SetNode(Transform node, bool isHead)
+    {
+        if (isHead)
+            head = node;
+        else
+            tail = node;
+    }
+    
 }
