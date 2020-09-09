@@ -9,9 +9,11 @@ public class RoadNode : MonoBehaviour
     public RoadSegment segmentBackward;
     public BoxCollider colliderForward; 
     public BoxCollider colliderBackward; 
-    public void OnEnable()
+    public void Init()
     {
-        
+        var colliders=GetComponents<BoxCollider>();
+        if (colliders.Length < 0)
+            gameObject.AddComponent<BoxCollider>();
     }
 
     public void GetDirectionFromCollider(Collider collider,out bool forward)

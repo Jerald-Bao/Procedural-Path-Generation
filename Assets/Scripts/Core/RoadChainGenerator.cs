@@ -18,6 +18,7 @@ public class RoadChainGenerator : MonoBehaviour
     private RoadNode currentNode;
     private Transform undockedNode;
     public GameObject RoadSegmentPrefab;
+    public Vector3 UndockedEndDisplacementFromCamera;
     private static Vector3 UnattachedNodeRotation;
     public void Update()
     {
@@ -29,7 +30,7 @@ public class RoadChainGenerator : MonoBehaviour
                 if (TryGetAnyNode(out node, out isForward))
                 {
                     currentNode = node;
-                    OnPointToAvaliableNode(node, isForward);
+                    OnPointToAvailableNode(node, isForward);
                 }
                 break;
             case State.Pointing:
@@ -40,7 +41,7 @@ public class RoadChainGenerator : MonoBehaviour
                     nodeType = GetNodeTypeByColliderDirection(isForward);
                     
                     if (!(isSameNode && isSameDirection))
-                        OnPointToAvaliableNode(node, isForward);
+                        OnPointToAvailableNode(node, isForward);
                     if (Input.GetMouseButtonDown(0))
                     {
                         state = State.AttachingOneSide;
@@ -68,16 +69,23 @@ public class RoadChainGenerator : MonoBehaviour
                     if (isValidDirection)
                     {
                         blueprint.SetNode(node,!isForward);
-                        state = State.AttachingBothSide;
                     }
                 }
                 else
                 {
                     UpdateUndockedNodeRotation();
                     SetUndockedNodeTransform();
-                    blueprint.SetNode(undockedNode,nodeType!=NodeType.Tail);
+                    blueprint.SetEnds(undockedNode,nodeType!=NodeType.Tail);
+                }
+
+                if (Input.GetMouseButtonDown(0))
+                {
+                    blueprint.BuildBlueprint();
+                    state = State.Idle;
+                    blueprint = null;
                 }
                 break;
+            
         }
     }
 
@@ -119,7 +127,7 @@ public class RoadChainGenerator : MonoBehaviour
         }
         else
         {
-            transform.position = Camera.main.transform.TransformPoint( new Vector3(0,-4,8));
+            transform.position = Camera.main.transform.TransformPoint( UndockedEndDisplacementFromCamera);
             transform.rotation = Quaternion.Euler(UnattachedNodeRotation);
         }
     }
@@ -150,7 +158,7 @@ public class RoadChainGenerator : MonoBehaviour
         blueprint.SetBlueprint();
     }
 
-    public void OnPointToAvaliableNode(RoadNode node,bool isForward)
+    public void OnPointToAvailableNode(RoadNode node,bool isForward)
     {
         Destroy(blueprint);
         state = State.Pointing;
@@ -159,6 +167,7 @@ public class RoadChainGenerator : MonoBehaviour
     }
     public void GenerateRoad()
     {
+        
     }
 
     public void UpdateRoadBlueprint()
